@@ -34,4 +34,36 @@ const createUser = (req, res) => {
     });
 };
 
-module.exports = { getUsers, getUser, createUser };
+const updateUserInfo = (req, res) => {
+  const { name, about } = req.body;
+  const userId = req.user._id;
+
+  User.findByIdAndUpdate(userId, { name, about }, { new: true })
+    .then((newInfo) => res.send(newInfo))
+    .catch((error) => {
+      console.log(error);
+      res.send(error.status);
+      res.send(error.message);
+    });
+};
+
+const updateUserAvatar = (req, res) => {
+  const { avatar } = req.body;
+  const userId = req.user._id;
+
+  User.findByIdAndUpdate(userId, { avatar }, { new: true })
+    .then((newAvatar) => res.send(newAvatar))
+    .catch((error) => {
+      console.log(error);
+      res.send(error.status);
+      res.send(error.message);
+    });
+};
+
+module.exports = {
+  getUsers,
+  getUser,
+  createUser,
+  updateUserInfo,
+  updateUserAvatar,
+};

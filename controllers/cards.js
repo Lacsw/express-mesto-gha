@@ -29,14 +29,14 @@ const deleteCard = async (req, res) => {
 
   try {
     const deletedCard = await Card.findByIdAndDelete(cardId);
+    if (!deletedCard) {
+      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
+      return;
+    }
 
     res.send(deletedCard);
   } catch (error) {
     if (error.name === "CastError") {
-      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
-      return;
-    }
-    if (error.name === "ValidationError") {
       res.status(400).send({ message: `Переданы некорректные данные.` });
       return;
     }
@@ -55,13 +55,14 @@ const likeCard = async (req, res) => {
       { new: true }
     );
 
-    res.send(likedCard);
-  } catch (error) {
-    if (error.name === "CastError") {
+    if (!likedCard) {
       res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
       return;
     }
-    if (error.name === "ValidationError") {
+
+    res.send(likedCard);
+  } catch (error) {
+    if (error.name === "CastError") {
       res.status(400).send({ message: `Переданы некорректные данные.` });
       return;
     }
@@ -79,14 +80,14 @@ const dislikeCard = async (req, res) => {
       { $pull: { likes: userId } },
       { new: true }
     );
+    if (!likedCard) {
+      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
+      return;
+    }
 
     res.send(likedCard);
   } catch (error) {
     if (error.name === "CastError") {
-      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
-      return;
-    }
-    if (error.name === "ValidationError") {
       res.status(400).send({ message: `Переданы некорректные данные.` });
       return;
     }

@@ -1,9 +1,8 @@
 const Card = require("../models/card");
 
 const getCards = async (req, res) => {
-  const cards = await Card.find({});
-
   try {
+    const cards = await Card.find({});
     res.send(cards);
   } catch (error) {
     res.status(500).send({ message: `Ошибка сервера ${error}` });
@@ -12,9 +11,9 @@ const getCards = async (req, res) => {
 
 const createCard = async (req, res) => {
   const { name, link, owner, likes, createdAt } = req.body;
-  const newCard = await Card.create({ name, link, owner, likes, createdAt });
 
   try {
+    const newCard = await Card.create({ name, link, owner, likes, createdAt });
     res.send(newCard);
   } catch (error) {
     if (error.name === "ValidationError") {
@@ -27,14 +26,21 @@ const createCard = async (req, res) => {
 
 const deleteCard = async (req, res) => {
   const { cardId } = req.params;
-  const deletedCard = await Card.findByIdAndDelete(cardId);
 
   try {
+    const deletedCard = await Card.findByIdAndDelete(cardId);
+
     res.send(deletedCard);
   } catch (error) {
-    console.log(error);
-    res.send(error.status);
-    res.send(error.message);
+    if (error.name === "CastError") {
+      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
+      return;
+    }
+    if (error.name === "ValidationError") {
+      res.status(400).send({ message: `Переданы некорректные данные.` });
+      return;
+    }
+    res.status(500).send({ message: `Ошибка сервера ${error}` });
   }
 };
 
@@ -52,7 +58,7 @@ const likeCard = async (req, res) => {
     res.send(likedCard);
   } catch (error) {
     if (error.name === "CastError") {
-      res.status(400).send({ message: `Карточка c ID:${cardId} не найдена` });
+      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
       return;
     }
     if (error.name === "ValidationError") {
@@ -77,7 +83,7 @@ const dislikeCard = async (req, res) => {
     res.send(likedCard);
   } catch (error) {
     if (error.name === "CastError") {
-      res.status(400).send({ message: `Карточка c ID:${cardId} не найдена` });
+      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
       return;
     }
     if (error.name === "ValidationError") {

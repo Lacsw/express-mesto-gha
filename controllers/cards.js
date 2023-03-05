@@ -38,4 +38,46 @@ const deleteCard = async (req, res) => {
   }
 };
 
-module.exports = { getCards, createCard, deleteCard };
+const likeCard = async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    const userId = req.user._id;
+
+    const likedCard = await Card.findByIdAndUpdate(
+      cardId,
+      {
+        $addToSet: { likes: userId },
+      },
+      { new: true }
+    );
+
+    res.send(likedCard);
+  } catch (error) {
+    console.log(error);
+    res.send(error.status);
+    res.send(error.message);
+  }
+};
+
+const dislikeCard = async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    const userId = req.user._id;
+
+    const likedCard = await Card.findByIdAndUpdate(
+      cardId,
+      {
+        $pull: { likes: userId },
+      },
+      { new: true }
+    );
+
+    res.send(likedCard);
+  } catch (error) {
+    console.log(error);
+    res.send(error.status);
+    res.send(error.message);
+  }
+};
+
+module.exports = { getCards, createCard, deleteCard, likeCard, dislikeCard };

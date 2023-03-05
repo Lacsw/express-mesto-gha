@@ -9,6 +9,7 @@ mongoose.connect("mongodb://localhost:27017/mestodb");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use((req, res, next) => {
   req.user = {
     _id: "6404abf703625ca6cc1575a1",
@@ -18,6 +19,9 @@ app.use((req, res, next) => {
 });
 
 app.use("/", router);
+app.all("*", (req, res) => {
+  res.status(404).send({ message: `Страница не найдена` });
+});
 
 app.listen(3000, () => {
   console.log("Server started");

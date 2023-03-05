@@ -7,7 +7,7 @@ const getUsers = (req, res) => {
         res.status(404).send({ message: `Нет пользователей` });
         return;
       }
-      res.send(users);
+      res.status(200).send(users);
     })
     .catch((error) => {
       res.status(500).send({ message: `Ошибка сервера ${error}` });
@@ -19,11 +19,15 @@ const getUser = (req, res) => {
 
   User.findById(userId)
     .then((user) => {
+      console.log(user);
+      if (!user) {
+        res.status(404).send({ message: `Пользователя не существует` });
+      }
       res.status(200).send(user);
     })
     .catch((error) => {
       if (error.name === "CastError") {
-        res.status(404).send({
+        res.status(400).send({
           message: `Пользователь c ID:${userId} не найден`,
         });
         return;
@@ -56,17 +60,19 @@ const updateUserInfo = (req, res) => {
     { runValidators: true, new: true }
   )
     .then((newInfo) => {
-      res.send(newInfo);
+      res.status(200).send(newInfo);
     })
     .catch((error) => {
       if (error.name === "ValidationError") {
-        res.status(400).send({
-          message: `Переданы некорректные данные при обновлении профиля.`,
-        });
+        res
+          .status(400)
+          .send({
+            message: `Переданы некорректные данные при обновлении профиля.`,
+          });
         return;
       }
       if (error.name === "CastError") {
-        res.status(400).send({
+        res.status(404).send({
           message: `Пользователь c ID:${userId} не найден`,
         });
         return;
@@ -80,7 +86,7 @@ const updateUserAvatar = (req, res) => {
   const userId = req.user._id;
 
   User.findByIdAndUpdate(userId, { avatar }, { runValidators: true, new: true })
-    .then((newAvatar) => res.send(newAvatar))
+    .then((newAvatar) => res.status(200).send(newAvatar))
     .catch((error) => {
       if (error.name === "ValidationError") {
         res.status(400).send({

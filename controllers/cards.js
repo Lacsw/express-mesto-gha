@@ -1,35 +1,35 @@
 const Card = require("../models/card");
 
 const getCards = async (req, res) => {
-  try {
-    const cards = await Card.find({});
+  const cards = await Card.find({});
 
+  try {
     res.send(cards);
   } catch (error) {
-    console.log(error);
-    res.send(error.status);
-    res.send(error.message);
+    res.status(500).send({ message: `Ошибка сервера ${error}` });
   }
 };
 
 const createCard = async (req, res) => {
-  try {
-    const { name, link, owner, likes, createdAt } = req.body;
-    const newCard = await Card.create({ name, link, owner, likes, createdAt });
+  const { name, link, owner, likes, createdAt } = req.body;
+  const newCard = await Card.create({ name, link, owner, likes, createdAt });
 
+  try {
     res.send(newCard);
   } catch (error) {
-    console.log(error);
-    res.send(error.status);
-    res.send(error.message);
+    if (error.name === "ValidationError") {
+      res.status(400).send({ message: `Ошибка валидации` });
+      return;
+    }
+    res.status(500).send({ message: `Ошибка сервера ${error}` });
   }
 };
 
 const deleteCard = async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const deletedCard = await Card.findByIdAndDelete(cardId);
+  const { cardId } = req.params;
+  const deletedCard = await Card.findByIdAndDelete(cardId);
 
+  try {
     res.send(deletedCard);
   } catch (error) {
     console.log(error);
@@ -39,44 +39,52 @@ const deleteCard = async (req, res) => {
 };
 
 const likeCard = async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const userId = req.user._id;
+  const { cardId } = req.params;
+  const userId = req.user._id;
 
+  try {
     const likedCard = await Card.findByIdAndUpdate(
       cardId,
-      {
-        $addToSet: { likes: userId },
-      },
+      { $addToSet: { likes: userId } },
       { new: true }
     );
 
     res.send(likedCard);
   } catch (error) {
-    console.log(error);
-    res.send(error.status);
-    res.send(error.message);
+    if (error.name === "CastError") {
+      res.status(400).send({ message: `Карточка c ID:${cardId} не найдена` });
+      return;
+    }
+    if (error.name === "ValidationError") {
+      res.status(400).send({ message: `Переданы некорректные данные.` });
+      return;
+    }
+    res.status(500).send({ message: `Ошибка сервера ${error}` });
   }
 };
 
 const dislikeCard = async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const userId = req.user._id;
+  const { cardId } = req.params;
+  const userId = req.user._id;
 
+  try {
     const likedCard = await Card.findByIdAndUpdate(
       cardId,
-      {
-        $pull: { likes: userId },
-      },
+      { $pull: { likes: userId } },
       { new: true }
     );
 
     res.send(likedCard);
   } catch (error) {
-    console.log(error);
-    res.send(error.status);
-    res.send(error.message);
+    if (error.name === "CastError") {
+      res.status(400).send({ message: `Карточка c ID:${cardId} не найдена` });
+      return;
+    }
+    if (error.name === "ValidationError") {
+      res.status(400).send({ message: `Переданы некорректные данные.` });
+      return;
+    }
+    res.status(500).send({ message: `Ошибка сервера ${error}` });
   }
 };
 

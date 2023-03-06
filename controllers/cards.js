@@ -1,4 +1,4 @@
-const Card = require("../models/card");
+const Card = require('../models/card');
 
 const getCards = async (req, res) => {
   try {
@@ -10,14 +10,22 @@ const getCards = async (req, res) => {
 };
 
 const createCard = async (req, res) => {
-  const { name, link, owner, likes, createdAt } = req.body;
+  const {
+    name, link, owner, likes, createdAt,
+  } = req.body;
 
   try {
-    const newCard = await Card.create({ name, link, owner, likes, createdAt });
+    const newCard = await Card.create({
+      name,
+      link,
+      owner,
+      likes,
+      createdAt,
+    });
     res.send(newCard);
   } catch (error) {
-    if (error.name === "ValidationError") {
-      res.status(400).send({ message: `Ошибка валидации` });
+    if (error.name === 'ValidationError') {
+      res.status(400).send({ message: 'Ошибка валидации' });
       return;
     }
     res.status(500).send({ message: `Ошибка сервера ${error}` });
@@ -36,8 +44,8 @@ const deleteCard = async (req, res) => {
 
     res.send(deletedCard);
   } catch (error) {
-    if (error.name === "CastError") {
-      res.status(400).send({ message: `Переданы некорректные данные.` });
+    if (error.name === 'CastError') {
+      res.status(400).send({ message: 'Переданы некорректные данные.' });
       return;
     }
     res.status(500).send({ message: `Ошибка сервера ${error}` });
@@ -62,8 +70,8 @@ const likeCard = async (req, res) => {
 
     res.send(likedCard);
   } catch (error) {
-    if (error.name === "CastError") {
-      res.status(400).send({ message: `Переданы некорректные данные.` });
+    if (error.name === 'CastError') {
+      res.status(400).send({ message: 'Переданы некорректные данные.' });
       return;
     }
     res.status(500).send({ message: `Ошибка сервера ${error}` });
@@ -87,12 +95,18 @@ const dislikeCard = async (req, res) => {
 
     res.send(likedCard);
   } catch (error) {
-    if (error.name === "CastError") {
-      res.status(400).send({ message: `Переданы некорректные данные.` });
+    if (error.name === 'CastError') {
+      res.status(400).send({ message: 'Переданы некорректные данные.' });
       return;
     }
     res.status(500).send({ message: `Ошибка сервера ${error}` });
   }
 };
 
-module.exports = { getCards, createCard, deleteCard, likeCard, dislikeCard };
+module.exports = {
+  getCards,
+  createCard,
+  deleteCard,
+  likeCard,
+  dislikeCard,
+};

@@ -1,10 +1,10 @@
-const User = require("../models/user");
+const User = require('../models/user');
 
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => {
       if (users.length === 0) {
-        res.status(404).send({ message: `Нет пользователей` });
+        res.status(404).send({ message: 'Нет пользователей' });
         return;
       }
       res.status(200).send(users);
@@ -19,14 +19,13 @@ const getUser = (req, res) => {
 
   User.findById(userId)
     .then((user) => {
-      console.log(user);
       if (!user) {
-        res.status(404).send({ message: `Пользователя не существует` });
+        res.status(404).send({ message: 'Пользователя не существует' });
       }
       res.status(200).send(user);
     })
     .catch((error) => {
-      if (error.name === "CastError") {
+      if (error.name === 'CastError') {
         res.status(400).send({
           message: `Пользователь c ID:${userId} не найден`,
         });
@@ -42,8 +41,8 @@ const createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((newUser) => res.status(200).send(newUser))
     .catch((error) => {
-      if (error.name === "ValidationError") {
-        res.status(400).send({ message: `Ошибка валидации` });
+      if (error.name === 'ValidationError') {
+        res.status(400).send({ message: 'Ошибка валидации' });
         return;
       }
       res.status(500).send({ message: `Ошибка сервера ${error}` });
@@ -63,15 +62,13 @@ const updateUserInfo = (req, res) => {
       res.status(200).send(newInfo);
     })
     .catch((error) => {
-      if (error.name === "ValidationError") {
-        res
-          .status(400)
-          .send({
-            message: `Переданы некорректные данные при обновлении профиля.`,
-          });
+      if (error.name === 'ValidationError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные при обновлении профиля.',
+        });
         return;
       }
-      if (error.name === "CastError") {
+      if (error.name === 'CastError') {
         res.status(404).send({
           message: `Пользователь c ID:${userId} не найден`,
         });
@@ -88,13 +85,13 @@ const updateUserAvatar = (req, res) => {
   User.findByIdAndUpdate(userId, { avatar }, { runValidators: true, new: true })
     .then((newAvatar) => res.status(200).send(newAvatar))
     .catch((error) => {
-      if (error.name === "ValidationError") {
+      if (error.name === 'ValidationError') {
         res.status(400).send({
-          message: `Переданы некорректные данные при обновлении аватара.`,
+          message: 'Переданы некорректные данные при обновлении аватара.',
         });
         return;
       }
-      if (error.name === "CastError") {
+      if (error.name === 'CastError') {
         res.status(400).send({
           message: `Пользователь c ID:${userId} не найден`,
         });

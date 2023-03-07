@@ -1,4 +1,5 @@
 const http2 = require('http2');
+const mongoose = require('mongoose');
 const User = require('../models/user');
 
 const {
@@ -12,12 +13,6 @@ const {
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => {
-      if (users.length === 0) {
-        res
-          .status(HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Нет пользователей' });
-        return;
-      }
       res.status(HTTP_STATUS_OK).send(users);
     })
     .catch((error) => {
@@ -31,19 +26,16 @@ const getUser = (req, res) => {
   const { userId } = req.params;
 
   User.findById(userId)
+    .orFail(() => {
+      res
+        .status(HTTP_STATUS_NOT_FOUND)
+        .send({ message: 'Пользователя не существует' });
+    })
     .then((user) => {
-      if (!user) {
-        res
-          .status(HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Пользователя не существует' });
-      }
       res.status(HTTP_STATUS_OK).send(user);
     })
     .catch((error) => {
-      if (error.name === 'CastError') {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: `Пользователь c ID:${userId} не найден`,
-        });
+      if (res.headersSent) {
         return;
       }
       res
@@ -58,7 +50,7 @@ const createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((newUser) => res.status(HTTP_STATUS_CREATED).send(newUser))
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error.ValidationError) {
         res
           .status(HTTP_STATUS_BAD_REQUEST)
           .send({ message: 'Ошибка валидации' });
@@ -79,19 +71,21 @@ const updateUserInfo = (req, res) => {
     { name, about },
     { runValidators: true, new: true }
   )
+    .orFail(() => {
+      res.status(HTTP_STATUS_NOT_FOUND).send({
+        message: `Пользователь c ID:${userId} не найден`,
+      });
+    })
     .then((newInfo) => {
       res.status(HTTP_STATUS_OK).send(newInfo);
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Переданы некорректные данные при обновлении профиля.',
-        });
+      if (res.headersSent) {
         return;
       }
-      if (error.name === 'CastError') {
-        res.status(HTTP_STATUS_NOT_FOUND).send({
-          message: `Пользователь c ID:${userId} не найден`,
+      if (error instanceof mongoose.Error.ValidationError) {
+        res.status(HTTP_STATUS_BAD_REQUEST).send({
+          message: 'Переданы некорректные данные при обновлении профиля.',
         });
         return;
       }
@@ -106,17 +100,19 @@ const updateUserAvatar = (req, res) => {
   const userId = req.user._id;
 
   User.findByIdAndUpdate(userId, { avatar }, { runValidators: true, new: true })
+    .orFail(() => {
+      res.status(HTTP_STATUS_NOT_FOUND).send({
+        message: `Пользователь c ID:${userId} не найден`,
+      });
+    })
     .then((newAvatar) => res.status(HTTP_STATUS_OK).send(newAvatar))
     .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Переданы некорректные данные при обновлении аватара.',
-        });
+      if (res.headersSent) {
         return;
       }
-      if (error.name === 'CastError') {
+      if (error instanceof mongoose.Error.ValidationError) {
         res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: `Пользователь c ID:${userId} не найден`,
+          message: 'Переданы некорректные данные при обновлении аватара.',
         });
         return;
       }

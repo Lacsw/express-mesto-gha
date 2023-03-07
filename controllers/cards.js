@@ -1,11 +1,22 @@
+const http2 = require('http2');
 const Card = require('../models/card');
+
+const {
+  HTTP_STATUS_OK,
+  HTTP_STATUS_CREATED,
+  HTTP_STATUS_BAD_REQUEST,
+  HTTP_STATUS_NOT_FOUND,
+  HTTP_STATUS_INTERNAL_SERVER_ERROR,
+} = http2.constants;
 
 const getCards = async (req, res) => {
   try {
     const cards = await Card.find({});
-    res.send(cards);
+    res.status(HTTP_STATUS_OK).send(cards);
   } catch (error) {
-    res.status(500).send({ message: `Ошибка сервера ${error}` });
+    res
+      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .send({ message: `Ошибка сервера ${error}` });
   }
 };
 
@@ -22,13 +33,15 @@ const createCard = async (req, res) => {
       likes,
       createdAt,
     });
-    res.send(newCard);
+    res.status(HTTP_STATUS_CREATED).send(newCard);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).send({ message: 'Ошибка валидации' });
+      res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Ошибка валидации' });
       return;
     }
-    res.status(500).send({ message: `Ошибка сервера ${error}` });
+    res
+      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .send({ message: `Ошибка сервера ${error}` });
   }
 };
 
@@ -38,17 +51,23 @@ const deleteCard = async (req, res) => {
   try {
     const deletedCard = await Card.findByIdAndDelete(cardId);
     if (!deletedCard) {
-      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
+      res
+        .status(HTTP_STATUS_NOT_FOUND)
+        .send({ message: `Карточка c ID:${cardId} не найдена` });
       return;
     }
 
-    res.send(deletedCard);
+    res.status(HTTP_STATUS_OK).send(deletedCard);
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Переданы некорректные данные.' });
+      res
+        .status(HTTP_STATUS_BAD_REQUEST)
+        .send({ message: 'Переданы некорректные данные.' });
       return;
     }
-    res.status(500).send({ message: `Ошибка сервера ${error}` });
+    res
+      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .send({ message: `Ошибка сервера ${error}` });
   }
 };
 
@@ -64,17 +83,23 @@ const likeCard = async (req, res) => {
     );
 
     if (!likedCard) {
-      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
+      res
+        .status(HTTP_STATUS_NOT_FOUND)
+        .send({ message: `Карточка c ID:${cardId} не найдена` });
       return;
     }
 
-    res.send(likedCard);
+    res.status(HTTP_STATUS_OK).send(likedCard);
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Переданы некорректные данные.' });
+      res
+        .status(HTTP_STATUS_BAD_REQUEST)
+        .send({ message: 'Переданы некорректные данные.' });
       return;
     }
-    res.status(500).send({ message: `Ошибка сервера ${error}` });
+    res
+      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .send({ message: `Ошибка сервера ${error}` });
   }
 };
 
@@ -89,17 +114,23 @@ const dislikeCard = async (req, res) => {
       { new: true }
     );
     if (!likedCard) {
-      res.status(404).send({ message: `Карточка c ID:${cardId} не найдена` });
+      res
+        .status(HTTP_STATUS_NOT_FOUND)
+        .send({ message: `Карточка c ID:${cardId} не найдена` });
       return;
     }
 
-    res.send(likedCard);
+    res.status(HTTP_STATUS_OK).send(likedCard);
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Переданы некорректные данные.' });
+      res
+        .status(HTTP_STATUS_BAD_REQUEST)
+        .send({ message: 'Переданы некорректные данные.' });
       return;
     }
-    res.status(500).send({ message: `Ошибка сервера ${error}` });
+    res
+      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .send({ message: `Ошибка сервера ${error}` });
   }
 };
 

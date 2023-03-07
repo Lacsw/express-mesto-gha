@@ -1,4 +1,6 @@
 const http2 = require('http2');
+const mongoose = require('mongoose');
+
 const Card = require('../models/card');
 
 const {
@@ -21,21 +23,16 @@ const getCards = async (req, res) => {
 };
 
 const createCard = async (req, res) => {
-  const {
-    name, link, owner, likes, createdAt,
-  } = req.body;
+  const { name, link } = req.body;
 
   try {
     const newCard = await Card.create({
       name,
       link,
-      owner,
-      likes,
-      createdAt,
     });
     res.status(HTTP_STATUS_CREATED).send(newCard);
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error instanceof mongoose.Error.ValidationError) {
       res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Ошибка валидации' });
       return;
     }
@@ -45,93 +42,88 @@ const createCard = async (req, res) => {
   }
 };
 
-const deleteCard = async (req, res) => {
+const deleteCard = (req, res) => {
   const { cardId } = req.params;
 
-  try {
-    const deletedCard = await Card.findByIdAndDelete(cardId);
-    if (!deletedCard) {
+  Card.findByIdAndDelete(cardId)
+    .orFail(() => {
       res
         .status(HTTP_STATUS_NOT_FOUND)
         .send({ message: `Карточка c ID:${cardId} не найдена` });
-      return;
-    }
-
-    res.status(HTTP_STATUS_OK).send(deletedCard);
-  } catch (error) {
-    if (error.name === 'CastError') {
+    })
+    .then((deletedCard) => {
+      res.status(HTTP_STATUS_OK).send(deletedCard);
+    })
+    .catch((error) => {
+      if (res.headersSent) {
+        return;
+      }
       res
-        .status(HTTP_STATUS_BAD_REQUEST)
-        .send({ message: 'Переданы некорректные данные.' });
-      return;
-    }
-    res
-      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: `Ошибка сервера ${error}` });
-  }
+        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: `Ошибка сервера ${error}` });
+    });
 };
 
-const likeCard = async (req, res) => {
+const likeCard = (req, res) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
-  try {
-    const likedCard = await Card.findByIdAndUpdate(
-      cardId,
-      { $addToSet: { likes: userId } },
-      { new: true }
-    );
-
-    if (!likedCard) {
+  Card.findByIdAndUpdate(
+    cardId,
+    { $addToSet: { likes: userId } },
+    { new: true }
+  )
+    .orFail(() => {
       res
         .status(HTTP_STATUS_NOT_FOUND)
         .send({ message: `Карточка c ID:${cardId} не найдена` });
-      return;
-    }
-
-    res.status(HTTP_STATUS_OK).send(likedCard);
-  } catch (error) {
-    if (error.name === 'CastError') {
+    })
+    .then((likedCard) => {
+      res.status(HTTP_STATUS_OK).send(likedCard);
+    })
+    .catch((error) => {
+      if (res.headersSent) {
+        return;
+      }
+      if (error instanceof mongoose.Error.ValidationError) {
+        res
+          .status(HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Переданы некорректные данные.' });
+        return;
+      }
       res
-        .status(HTTP_STATUS_BAD_REQUEST)
-        .send({ message: 'Переданы некорректные данные.' });
-      return;
-    }
-    res
-      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: `Ошибка сервера ${error}` });
-  }
+        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: `Ошибка сервера ${error}` });
+    });
 };
 
-const dislikeCard = async (req, res) => {
+const dislikeCard = (req, res) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
-  try {
-    const likedCard = await Card.findByIdAndUpdate(
-      cardId,
-      { $pull: { likes: userId } },
-      { new: true }
-    );
-    if (!likedCard) {
+  Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
+    .orFail(() => {
       res
         .status(HTTP_STATUS_NOT_FOUND)
         .send({ message: `Карточка c ID:${cardId} не найдена` });
-      return;
-    }
-
-    res.status(HTTP_STATUS_OK).send(likedCard);
-  } catch (error) {
-    if (error.name === 'CastError') {
+    })
+    .then((likedCard) => {
+      res.status(HTTP_STATUS_OK).send(likedCard);
+    })
+    .catch((error) => {
+      if (res.headersSent) {
+        return;
+      }
+      if (error instanceof mongoose.Error.ValidationError) {
+        res
+          .status(HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Переданы некорректные данные.' });
+        return;
+      }
       res
-        .status(HTTP_STATUS_BAD_REQUEST)
-        .send({ message: 'Переданы некорректные данные.' });
-      return;
-    }
-    res
-      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: `Ошибка сервера ${error}` });
-  }
+        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: `Ошибка сервера ${error}` });
+    });
 };
 
 module.exports = {

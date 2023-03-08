@@ -45,6 +45,12 @@ const createCard = async (req, res) => {
 const deleteCard = (req, res) => {
   const { cardId } = req.params;
 
+  if (!mongoose.isValidObjectId(cardId)) {
+    res
+      .status(HTTP_STATUS_BAD_REQUEST)
+      .send({ message: 'Невалидный карточки ID' });
+  }
+
   Card.findByIdAndDelete(cardId)
     .orFail(() => {
       res
@@ -68,6 +74,10 @@ const likeCard = (req, res) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
+  if (!mongoose.isValidObjectId(cardId) || !mongoose.isValidObjectId(userId)) {
+    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+  }
+
   Card.findByIdAndUpdate(
     cardId,
     { $addToSet: { likes: userId } },
@@ -85,12 +95,6 @@ const likeCard = (req, res) => {
       if (res.headersSent) {
         return;
       }
-      if (error instanceof mongoose.Error.ValidationError) {
-        res
-          .status(HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы некорректные данные.' });
-        return;
-      }
       res
         .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send({ message: `Ошибка сервера ${error}` });
@@ -100,6 +104,10 @@ const likeCard = (req, res) => {
 const dislikeCard = (req, res) => {
   const { cardId } = req.params;
   const userId = req.user._id;
+
+  if (!mongoose.isValidObjectId(cardId) || !mongoose.isValidObjectId(userId)) {
+    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+  }
 
   Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
     .orFail(() => {
@@ -112,12 +120,6 @@ const dislikeCard = (req, res) => {
     })
     .catch((error) => {
       if (res.headersSent) {
-        return;
-      }
-      if (error instanceof mongoose.Error.ValidationError) {
-        res
-          .status(HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы некорректные данные.' });
         return;
       }
       res

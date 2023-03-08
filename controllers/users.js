@@ -1,5 +1,6 @@
 const http2 = require('http2');
 const mongoose = require('mongoose');
+
 const User = require('../models/user');
 
 const {
@@ -25,7 +26,11 @@ const getUsers = (req, res) => {
 const getUser = (req, res) => {
   const { userId } = req.params;
 
-  User.findById(userId)
+  if (!mongoose.isValidObjectId(userId)) {
+    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+  }
+
+  User.findById(userId, undefined, { runValidators: true })
     .orFail(() => {
       res
         .status(HTTP_STATUS_NOT_FOUND)
@@ -66,6 +71,10 @@ const updateUserInfo = (req, res) => {
   const { name, about } = req.body;
   const userId = req.user._id;
 
+  if (!mongoose.isValidObjectId(userId)) {
+    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+  }
+
   User.findByIdAndUpdate(
     userId,
     { name, about },
@@ -98,6 +107,10 @@ const updateUserInfo = (req, res) => {
 const updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
   const userId = req.user._id;
+
+  if (!mongoose.isValidObjectId(userId)) {
+    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+  }
 
   User.findByIdAndUpdate(userId, { avatar }, { runValidators: true, new: true })
     .orFail(() => {

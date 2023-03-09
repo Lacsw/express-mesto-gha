@@ -2,10 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const router = require('./routes/index');
 
-const { PORT, DATABASE_URL } = require('./config');
+const { PORT } = require('./config');
 
 const app = express();
-mongoose.connect(DATABASE_URL);
+mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.use(express.json());
 app.use((req, res, next) => {

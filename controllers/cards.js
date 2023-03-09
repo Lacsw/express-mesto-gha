@@ -13,7 +13,7 @@ const {
 
 const getCards = async (req, res) => {
   try {
-    const cards = await Card.find({});
+    const cards = await Card.find({}).populate(['owner', 'likes']);
     res.status(HTTP_STATUS_OK).send(cards);
   } catch (error) {
     res
@@ -24,11 +24,13 @@ const getCards = async (req, res) => {
 
 const createCard = async (req, res) => {
   const { name, link } = req.body;
+  const owner = req.user._id;
 
   try {
     const newCard = await Card.create({
       name,
       link,
+      owner,
     });
     res.status(HTTP_STATUS_CREATED).send(newCard);
   } catch (error) {
@@ -53,6 +55,7 @@ const deleteCard = (req, res) => {
   }
 
   Card.findByIdAndDelete(cardId)
+    .populate(['owner', 'likes'])
     .orFail(() => {
       res
         .status(HTTP_STATUS_NOT_FOUND)
@@ -68,20 +71,16 @@ const deleteCard = (req, res) => {
     });
 };
 
-const likeCard = (req, res) => {
+const toogleLikeCard = (req, res, data) => {
   const { cardId } = req.params;
-  const userId = req.user._id;
 
-  if (!mongoose.isValidObjectId(cardId) || !mongoose.isValidObjectId(userId)) {
+  if (!mongoose.isValidObjectId(cardId)) {
     res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
     return;
   }
 
-  Card.findByIdAndUpdate(
-    cardId,
-    { $addToSet: { likes: userId } },
-    { new: true }
-  )
+  Card.findByIdAndUpdate(cardId, data, { new: true })
+    .populate(['owner', 'likes'])
     .orFail(() => {
       res
         .status(HTTP_STATUS_NOT_FOUND)
@@ -97,29 +96,18 @@ const likeCard = (req, res) => {
     });
 };
 
-const dislikeCard = (req, res) => {
-  const { cardId } = req.params;
+const likeCard = (req, res) => {
   const userId = req.user._id;
+  const data = { $addToSet: { likes: userId } };
 
-  if (!mongoose.isValidObjectId(cardId) || !mongoose.isValidObjectId(userId)) {
-    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
-    return;
-  }
+  toogleLikeCard(req, res, data);
+};
 
-  Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
-    .orFail(() => {
-      res
-        .status(HTTP_STATUS_NOT_FOUND)
-        .send({ message: `Карточка c ID:${cardId} не найдена` });
-    })
-    .then((likedCard) => {
-      res.status(HTTP_STATUS_OK).send(likedCard);
-    })
-    .catch((error) => {
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
+const dislikeCard = (req, res) => {
+  const userId = req.user._id;
+  const data = { $pull: { likes: userId } };
+
+  toogleLikeCard(req, res, data);
 };
 
 module.exports = {

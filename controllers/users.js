@@ -65,16 +65,15 @@ const createUser = (req, res) => {
     });
 };
 
-const updateUserDecorator = (updateUserFunc) => (req, res) => {
+const updateUserDecorator = (req, res, data) => {
   const userId = req.user._id;
-  const newData = updateUserFunc(req.body);
 
   if (!mongoose.isValidObjectId(userId)) {
     res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
     return;
   }
 
-  User.findByIdAndUpdate(userId, newData, { runValidators: true, new: true })
+  User.findByIdAndUpdate(userId, data, { runValidators: true, new: true })
     .orFail(() => {
       res.status(HTTP_STATUS_NOT_FOUND).send({
         message: `Пользователь c ID:${userId} не найден`,
@@ -96,14 +95,20 @@ const updateUserDecorator = (updateUserFunc) => (req, res) => {
     });
 };
 
-const updateUserInfo = updateUserDecorator((reqBody) => ({
-  name: reqBody.name,
-  about: reqBody.about,
-}));
+const updateUserInfo = (req, res) => {
+  const data = {
+    name: req.body.name,
+    about: req.body.about,
+  };
+  updateUserDecorator(req, res, data);
+};
 
-const updateUserAvatar = updateUserDecorator((reqBody) => ({
-  avatar: reqBody.avatar,
-}));
+const updateUserAvatar = (req, res) => {
+  const data = {
+    avatar: req.body.avatar,
+  };
+  updateUserDecorator(req, res, data);
+};
 
 module.exports = {
   getUsers,

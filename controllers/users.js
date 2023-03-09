@@ -28,6 +28,7 @@ const getUser = (req, res) => {
 
   if (!mongoose.isValidObjectId(userId)) {
     res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+    return;
   }
 
   User.findById(userId, undefined, { runValidators: true })
@@ -40,9 +41,6 @@ const getUser = (req, res) => {
       res.status(HTTP_STATUS_OK).send(user);
     })
     .catch((error) => {
-      if (res.headersSent) {
-        return;
-      }
       res
         .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send({ message: `Ошибка сервера ${error}` });
@@ -73,6 +71,7 @@ const updateUserDecorator = (updateUserFunc) => (req, res) => {
 
   if (!mongoose.isValidObjectId(userId)) {
     res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+    return;
   }
 
   User.findByIdAndUpdate(userId, newData, { runValidators: true, new: true })
@@ -85,12 +84,9 @@ const updateUserDecorator = (updateUserFunc) => (req, res) => {
       res.status(HTTP_STATUS_OK).send(newInfo);
     })
     .catch((error) => {
-      if (res.headersSent) {
-        return;
-      }
       if (error instanceof mongoose.Error.ValidationError) {
         res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Переданы некорректные данные при обновлении профиля.',
+          message: 'Переданы некорректные данные.',
         });
         return;
       }

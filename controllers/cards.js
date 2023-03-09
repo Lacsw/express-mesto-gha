@@ -48,7 +48,8 @@ const deleteCard = (req, res) => {
   if (!mongoose.isValidObjectId(cardId)) {
     res
       .status(HTTP_STATUS_BAD_REQUEST)
-      .send({ message: 'Невалидный карточки ID' });
+      .send({ message: 'Невалидный ID карточки' });
+    return;
   }
 
   Card.findByIdAndDelete(cardId)
@@ -61,9 +62,6 @@ const deleteCard = (req, res) => {
       res.status(HTTP_STATUS_OK).send(deletedCard);
     })
     .catch((error) => {
-      if (res.headersSent) {
-        return;
-      }
       res
         .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send({ message: `Ошибка сервера ${error}` });
@@ -76,6 +74,7 @@ const likeCard = (req, res) => {
 
   if (!mongoose.isValidObjectId(cardId) || !mongoose.isValidObjectId(userId)) {
     res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+    return;
   }
 
   Card.findByIdAndUpdate(
@@ -92,9 +91,6 @@ const likeCard = (req, res) => {
       res.status(HTTP_STATUS_OK).send(likedCard);
     })
     .catch((error) => {
-      if (res.headersSent) {
-        return;
-      }
       res
         .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send({ message: `Ошибка сервера ${error}` });
@@ -107,6 +103,7 @@ const dislikeCard = (req, res) => {
 
   if (!mongoose.isValidObjectId(cardId) || !mongoose.isValidObjectId(userId)) {
     res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
+    return;
   }
 
   Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
@@ -119,9 +116,6 @@ const dislikeCard = (req, res) => {
       res.status(HTTP_STATUS_OK).send(likedCard);
     })
     .catch((error) => {
-      if (res.headersSent) {
-        return;
-      }
       res
         .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send({ message: `Ошибка сервера ${error}` });

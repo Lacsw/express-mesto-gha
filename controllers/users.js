@@ -67,19 +67,15 @@ const createUser = (req, res) => {
     });
 };
 
-const updateUserInfo = (req, res) => {
-  const { name, about } = req.body;
+const updateUserDecorator = (updateUserFunc) => (req, res) => {
   const userId = req.user._id;
+  const newData = updateUserFunc(req.body);
 
   if (!mongoose.isValidObjectId(userId)) {
     res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
   }
 
-  User.findByIdAndUpdate(
-    userId,
-    { name, about },
-    { runValidators: true, new: true }
-  )
+  User.findByIdAndUpdate(userId, newData, { runValidators: true, new: true })
     .orFail(() => {
       res.status(HTTP_STATUS_NOT_FOUND).send({
         message: `Пользователь c ID:${userId} не найден`,
@@ -104,36 +100,14 @@ const updateUserInfo = (req, res) => {
     });
 };
 
-const updateUserAvatar = (req, res) => {
-  const { avatar } = req.body;
-  const userId = req.user._id;
+const updateUserInfo = updateUserDecorator((reqBody) => ({
+  name: reqBody.name,
+  about: reqBody.about,
+}));
 
-  if (!mongoose.isValidObjectId(userId)) {
-    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
-  }
-
-  User.findByIdAndUpdate(userId, { avatar }, { runValidators: true, new: true })
-    .orFail(() => {
-      res.status(HTTP_STATUS_NOT_FOUND).send({
-        message: `Пользователь c ID:${userId} не найден`,
-      });
-    })
-    .then((newAvatar) => res.status(HTTP_STATUS_OK).send(newAvatar))
-    .catch((error) => {
-      if (res.headersSent) {
-        return;
-      }
-      if (error instanceof mongoose.Error.ValidationError) {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Переданы некорректные данные при обновлении аватара.',
-        });
-        return;
-      }
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
-};
+const updateUserAvatar = updateUserDecorator((reqBody) => ({
+  avatar: reqBody.avatar,
+}));
 
 module.exports = {
   getUsers,

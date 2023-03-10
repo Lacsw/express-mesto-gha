@@ -65,7 +65,7 @@ const createUser = (req, res) => {
     });
 };
 
-const updateUserDecorator = (req, res, data) => {
+const updateUser = (req, res, data) => {
   const userId = req.user._id;
 
   if (!mongoose.isValidObjectId(userId)) {
@@ -100,14 +100,14 @@ const updateUserInfo = (req, res) => {
     name: req.body.name,
     about: req.body.about,
   };
-  updateUserDecorator(req, res, data);
+  updateUser(req, res, data);
 };
 
 const updateUserAvatar = (req, res) => {
   const data = {
     avatar: req.body.avatar,
   };
-  updateUserDecorator(req, res, data);
+  updateUser(req, res, data);
 };
 
 module.exports = {

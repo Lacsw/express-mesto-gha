@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 
+const { SECRET_WORD } = require('../config');
+
 const {
   HTTP_STATUS_OK,
   HTTP_STATUS_CREATED,
@@ -18,11 +20,11 @@ const login = (req, res) => {
 
   User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'secret-word', {
+      const token = jwt.sign({ _id: user._id }, SECRET_WORD, {
         expiresIn: '7d',
       });
 
-      return res.send(token);
+      res.cookie('jwt', token, { maxAge: 3600000, httpOnly: true }).send(token);
     })
     .catch((err) => {
       res.status(401).send({ message: err.message });

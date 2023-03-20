@@ -1,6 +1,7 @@
 const http2 = require('http2');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 
@@ -11,6 +12,30 @@ const {
   HTTP_STATUS_NOT_FOUND,
   HTTP_STATUS_INTERNAL_SERVER_ERROR,
 } = http2.constants;
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          return Promise.reject(new Error('Неправильные почта или пароль'));
+        }
+
+        const token = jwt.sign({ _id: user._id }, 'secret-word', {
+          expiresIn: '7d',
+        });
+        return res.send(token);
+      });
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
+    });
+};
 
 const getUsers = (req, res) => {
   User.find({})
@@ -119,4 +144,5 @@ module.exports = {
   createUser,
   updateUserInfo,
   updateUserAvatar,
+  login,
 };

@@ -132,6 +132,30 @@ const updateUserAvatar = (req, res) => {
   updateUser(req, res, data);
 };
 
+const getUserInfo = (req, res) => {
+  const userId = req.user._id;
+
+  if (!mongoose.isValidObjectId(userId)) {
+    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидныйsasd ID' });
+    return;
+  }
+
+  User.findById(userId, undefined, { runValidators: true })
+    .orFail(() => {
+      res
+        .status(HTTP_STATUS_NOT_FOUND)
+        .send({ message: 'Пользователя не существует' });
+    })
+    .then((user) => {
+      res.status(HTTP_STATUS_OK).send(user);
+    })
+    .catch((error) => {
+      res
+        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: `Ошибка сервера ${error}` });
+    });
+};
+
 module.exports = {
   getUsers,
   getUser,
@@ -139,4 +163,5 @@ module.exports = {
   updateUserInfo,
   updateUserAvatar,
   login,
+  getUserInfo,
 };

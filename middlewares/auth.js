@@ -1,13 +1,15 @@
 /* eslint consistent-return: off */
 const jwt = require('jsonwebtoken');
 
+const UnauthorizedError = require('../errors/unauthorized-err');
+
 const { SECRET_WORD } = require('../config');
 
 module.exports = (req, res, next) => {
   const token = req.cookies.jwt;
 
   if (!token) {
-    return res.status(401).send({ message: 'Необходима авторизация' });
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
   let payload;
@@ -15,7 +17,7 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, SECRET_WORD);
   } catch (error) {
-    return res.status(401).send({ message: 'Необходима авторизация' });
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
   req.user = payload;

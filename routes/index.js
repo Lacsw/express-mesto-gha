@@ -15,4 +15,8 @@ router.all('*', (req, res) => {
   res.status(HTTP_STATUS_NOT_FOUND).send({ message: 'Страница не найдена' });
 });
 
+router.use((err, req, res) => {
+  res.send({ message: err.message });
+});
+
 module.exports = router;

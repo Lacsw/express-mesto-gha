@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 const BadRequestError = require('../errors/bad-request-err');
+const ConflictError = require('../errors/conflict-err');
 
 const { SECRET_WORD } = require('../config');
 
@@ -33,7 +34,10 @@ const createUser = (req, res, next) => {
     .then((newUser) => res.status(HTTP_STATUS_CREATED).send(newUser.toJSON()))
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
-        throw new BadRequestError('Ошибка валидации');
+        throw new BadRequestError(error.message);
+      }
+      if (error.code === 11000) {
+        throw new ConflictError('Пользователь с такой почтой уже существует.');
       }
     })
     .catch(next);

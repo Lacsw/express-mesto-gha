@@ -1,79 +1,55 @@
-const http2 = require('http2');
 const mongoose = require('mongoose');
+const { HTTP_STATUS_OK } = require('http2').constants;
 
 const User = require('../models/user');
+const BadRequestError = require('../errors/bad-request-err');
+const NotFoundError = require('../errors/not-found-err');
 
-const {
-  HTTP_STATUS_OK,
-  HTTP_STATUS_BAD_REQUEST,
-  HTTP_STATUS_NOT_FOUND,
-  HTTP_STATUS_INTERNAL_SERVER_ERROR,
-} = http2.constants;
-
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
       res.status(HTTP_STATUS_OK).send(users);
     })
-    .catch((error) => {
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
+    .catch(next);
 };
 
-const getUser = (req, res) => {
+const getUser = (req, res, next) => {
   const { userId } = req.params;
 
   if (!mongoose.isValidObjectId(userId)) {
-    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
-    return;
+    throw new BadRequestError('Невалидный ID');
   }
 
   User.findById(userId, undefined, { runValidators: true })
     .orFail(() => {
-      res
-        .status(HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Пользователя не существует' });
+      throw new NotFoundError('Пользователя не существует');
     })
     .then((user) => {
       res.status(HTTP_STATUS_OK).send(user);
     })
-    .catch((error) => {
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
+    .catch(next);
 };
 
-const updateUser = (req, res, data) => {
+const updateUser = (req, res, data, next) => {
   const userId = req.user._id;
 
   if (!mongoose.isValidObjectId(userId)) {
-    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
-    return;
+    throw new BadRequestError('Невалидный ID');
   }
 
   User.findByIdAndUpdate(userId, data, { runValidators: true, new: true })
     .orFail(() => {
-      res.status(HTTP_STATUS_NOT_FOUND).send({
-        message: `Пользователь c ID:${userId} не найден`,
-      });
+      throw new NotFoundError('Пользователя не существует');
     })
     .then((newInfo) => {
       res.status(HTTP_STATUS_OK).send(newInfo);
     })
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Переданы некорректные данные.',
-        });
-        return;
+        throw new BadRequestError('Ошибка валидации');
       }
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
+    })
+    .catch(next);
 };
 
 const updateUserInfo = (req, res) => {
@@ -91,28 +67,21 @@ const updateUserAvatar = (req, res) => {
   updateUser(req, res, data);
 };
 
-const getUserInfo = (req, res) => {
+const getUserInfo = (req, res, next) => {
   const userId = req.user._id;
 
   if (!mongoose.isValidObjectId(userId)) {
-    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
-    return;
+    throw new BadRequestError('Невалидный ID');
   }
 
   User.findById(userId, undefined, { runValidators: true })
     .orFail(() => {
-      res
-        .status(HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Пользователя не существует' });
+      throw new NotFoundError('Пользователя не существует');
     })
     .then((user) => {
       res.status(HTTP_STATUS_OK).send(user);
     })
-    .catch((error) => {
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
+    .catch(next);
 };
 
 module.exports = {

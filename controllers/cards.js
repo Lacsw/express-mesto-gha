@@ -27,11 +27,9 @@ const createCard = async (req, res) => {
   const owner = req.user._id;
 
   try {
-    const newCard = await Card.create({
-      name,
-      link,
-      owner,
-    });
+    const data = await Card.create({ name, link, owner });
+    const newCard = await data.populate(['owner', 'likes']);
+
     res.status(HTTP_STATUS_CREATED).send(newCard);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
@@ -46,6 +44,7 @@ const createCard = async (req, res) => {
 
 const deleteCard = (req, res) => {
   const { cardId } = req.params;
+  const userId = req.user._id;
 
   if (!mongoose.isValidObjectId(cardId)) {
     res
@@ -54,15 +53,30 @@ const deleteCard = (req, res) => {
     return;
   }
 
-  Card.findByIdAndDelete(cardId)
+  Card.findById(cardId)
     .populate(['owner', 'likes'])
-    .orFail(() => {
-      res
-        .status(HTTP_STATUS_NOT_FOUND)
-        .send({ message: `Карточка c ID:${cardId} не найдена` });
-    })
-    .then((deletedCard) => {
-      res.status(HTTP_STATUS_OK).send(deletedCard);
+    .then((card) => {
+      if (!card) {
+        res
+          .status(HTTP_STATUS_NOT_FOUND)
+          .send({ message: `Карточка c ID:${cardId} не найдена` });
+        return;
+      }
+      if (card.owner._id.toString() !== userId) {
+        res
+          .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+          .send({ message: 'Можно удалять только свои карточки' });
+      } else {
+        Card.findByIdAndDelete(cardId)
+          .then((deletedCard) => {
+            res.status(HTTP_STATUS_OK).send(deletedCard);
+          })
+          .catch((error) => {
+            res
+              .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+              .send({ message: `Ошибка сервера ${error}` });
+          });
+      }
     })
     .catch((error) => {
       res

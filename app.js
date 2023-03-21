@@ -1,7 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const router = require('./routes/index');
 const cookieParser = require('cookie-parser');
+
+const router = require('./routes/index');
 
 const { PORT } = require('./config');
 

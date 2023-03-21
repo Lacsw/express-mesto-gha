@@ -27,7 +27,7 @@ const login = (req, res) => {
       res.cookie('jwt', token, { maxAge: 3600000, httpOnly: true }).send(token);
     })
     .catch((err) => {
-      res.status(401).send({ message: err.message });
+      res.status(HTTP_STATUS_BAD_REQUEST).send({ message: err.message });
     });
 };
 
@@ -136,7 +136,7 @@ const getUserInfo = (req, res) => {
   const userId = req.user._id;
 
   if (!mongoose.isValidObjectId(userId)) {
-    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидныйsasd ID' });
+    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
     return;
   }
 

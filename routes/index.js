@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { errors } = require('celebrate');
 
 const { HTTP_STATUS_NOT_FOUND } = require('http2').constants;
 
@@ -17,6 +18,7 @@ router.all('*', (req, res) => {
   res.status(HTTP_STATUS_NOT_FOUND).send({ message: 'Страница не найдена' });
 });
 
+router.use(errors());
 router.use(errorHandler);
 
 module.exports = router;

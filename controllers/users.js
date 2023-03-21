@@ -73,7 +73,7 @@ const createUser = (req, res) => {
   bcrypt
     .hash(password, 10)
     .then((hash) => User.create({ name, about, avatar, email, password: hash }))
-    .then((newUser) => res.status(HTTP_STATUS_CREATED).send(newUser))
+    .then((newUser) => res.status(HTTP_STATUS_CREATED).send(newUser.toJSON()))
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
         res

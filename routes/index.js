@@ -1,10 +1,12 @@
 const router = require('express').Router();
+
 const { HTTP_STATUS_NOT_FOUND } = require('http2').constants;
 
 const authRouter = require('./auth');
 const usersRouter = require('./users');
 const cardsRouter = require('./cards');
 const auth = require('../middlewares/auth');
+const errorHandler = require('../middlewares/error-handler');
 
 router.use('/', authRouter);
 router.use(auth);
@@ -15,8 +17,6 @@ router.all('*', (req, res) => {
   res.status(HTTP_STATUS_NOT_FOUND).send({ message: 'Страница не найдена' });
 });
 
-router.use((err, req, res) => {
-  res.send({ message: err.message });
-});
+router.use(errorHandler);
 
 module.exports = router;

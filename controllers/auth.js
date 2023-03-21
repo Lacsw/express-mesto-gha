@@ -4,16 +4,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
+const BadRequestError = require('../errors/bad-request-err');
 
 const { SECRET_WORD } = require('../config');
 
-const {
-  HTTP_STATUS_CREATED,
-  HTTP_STATUS_BAD_REQUEST,
-  HTTP_STATUS_INTERNAL_SERVER_ERROR,
-} = http2.constants;
+const { HTTP_STATUS_CREATED } = http2.constants;
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   User.findUserByCredentials(email, password)
@@ -24,12 +21,10 @@ const login = (req, res) => {
 
       res.cookie('jwt', token, { maxAge: 3600000, httpOnly: true }).send(token);
     })
-    .catch((err) => {
-      res.status(HTTP_STATUS_BAD_REQUEST).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, about, avatar, email, password } = req.body;
 
   bcrypt
@@ -38,15 +33,10 @@ const createUser = (req, res) => {
     .then((newUser) => res.status(HTTP_STATUS_CREATED).send(newUser.toJSON()))
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
-        res
-          .status(HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Ошибка валидации' });
-        return;
+        throw new BadRequestError('Ошибка валидации');
       }
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
+    })
+    .catch(next);
 };
 
 module.exports = { createUser, login };

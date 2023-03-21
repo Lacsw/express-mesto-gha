@@ -2,27 +2,22 @@ const http2 = require('http2');
 const mongoose = require('mongoose');
 
 const Card = require('../models/card');
+const BadRequestError = require('../errors/bad-request-err');
+const NotFoundError = require('../errors/not-found-err');
+const ForbiddenError = require('../errors/forbidden-err');
 
-const {
-  HTTP_STATUS_OK,
-  HTTP_STATUS_CREATED,
-  HTTP_STATUS_BAD_REQUEST,
-  HTTP_STATUS_NOT_FOUND,
-  HTTP_STATUS_INTERNAL_SERVER_ERROR,
-} = http2.constants;
+const { HTTP_STATUS_OK, HTTP_STATUS_CREATED } = http2.constants;
 
-const getCards = async (req, res) => {
+const getCards = async (req, res, next) => {
   try {
     const cards = await Card.find({}).populate(['owner', 'likes']);
     res.status(HTTP_STATUS_OK).send(cards);
-  } catch (error) {
-    res
-      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: `Ошибка сервера ${error}` });
+  } catch (err) {
+    next(err);
   }
 };
 
-const createCard = async (req, res) => {
+const createCard = async (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
@@ -33,81 +28,55 @@ const createCard = async (req, res) => {
     res.status(HTTP_STATUS_CREATED).send(newCard);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Ошибка валидации' });
-      return;
+      throw new BadRequestError('Ошибка валидации');
     }
-    res
-      .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: `Ошибка сервера ${error}` });
+    next(error);
   }
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
   if (!mongoose.isValidObjectId(cardId)) {
-    res
-      .status(HTTP_STATUS_BAD_REQUEST)
-      .send({ message: 'Невалидный ID карточки' });
-    return;
+    throw new BadRequestError('Невалидный ID');
   }
 
   Card.findById(cardId)
     .populate(['owner', 'likes'])
     .then((card) => {
       if (!card) {
-        res
-          .status(HTTP_STATUS_NOT_FOUND)
-          .send({ message: `Карточка c ID:${cardId} не найдена` });
-        return;
+        throw new NotFoundError(`Карточка c ID:${cardId} не найдена`);
       }
       if (card.owner._id.toString() !== userId) {
-        res
-          .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Можно удалять только свои карточки' });
+        throw new ForbiddenError('Можно удалять только свои карточки');
       } else {
         Card.findByIdAndDelete(cardId)
           .then((deletedCard) => {
             res.status(HTTP_STATUS_OK).send(deletedCard);
           })
-          .catch((error) => {
-            res
-              .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-              .send({ message: `Ошибка сервера ${error}` });
-          });
+          .catch(next);
       }
     })
-    .catch((error) => {
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
+    .catch(next);
 };
 
-const toogleLikeCard = (req, res, data) => {
+const toogleLikeCard = (req, res, data, next) => {
   const { cardId } = req.params;
 
   if (!mongoose.isValidObjectId(cardId)) {
-    res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Невалидный ID' });
-    return;
+    throw new BadRequestError('Невалидный ID');
   }
 
   Card.findByIdAndUpdate(cardId, data, { new: true })
     .populate(['owner', 'likes'])
     .orFail(() => {
-      res
-        .status(HTTP_STATUS_NOT_FOUND)
-        .send({ message: `Карточка c ID:${cardId} не найдена` });
+      throw new NotFoundError(`Карточка c ID:${cardId} не найдена`);
     })
     .then((likedCard) => {
       res.status(HTTP_STATUS_OK).send(likedCard);
     })
-    .catch((error) => {
-      res
-        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: `Ошибка сервера ${error}` });
-    });
+    .catch(next);
 };
 
 const likeCard = (req, res) => {

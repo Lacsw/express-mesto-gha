@@ -8,6 +8,7 @@ const BadRequestError = require('../errors/bad-request-err');
 const ConflictError = require('../errors/conflict-err');
 
 const { SECRET_WORD } = require('../config');
+const { MONGO_DUPLICATE_CODE } = require('../utils/constants');
 
 const { HTTP_STATUS_CREATED } = http2.constants;
 
@@ -36,7 +37,7 @@ const createUser = (req, res, next) => {
       if (error instanceof mongoose.Error.ValidationError) {
         throw new BadRequestError(error.message);
       }
-      if (error.code === 11000) {
+      if (error.code === MONGO_DUPLICATE_CODE) {
         throw new ConflictError('Пользователь с такой почтой уже существует.');
       }
     })

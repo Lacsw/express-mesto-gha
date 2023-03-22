@@ -9,7 +9,7 @@ const {
   getUserInfo,
 } = require('../controllers/users');
 
-const uriRegEx = /^(http(s)?:\/\/)[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+$/;
+const { URI_REGEX } = require('../utils/constants');
 
 router.get('/', getUsers);
 router.get('/me', getUserInfo);
@@ -27,11 +27,19 @@ router.patch(
   '/me/avatar',
   celebrate({
     body: Joi.object().keys({
-      avatar: Joi.string().regex(uriRegEx),
+      avatar: Joi.string().regex(URI_REGEX),
     }),
   }),
   updateUserAvatar
 );
-router.get('/:userId', getUser);
+router.get(
+  '/:userId',
+  celebrate({
+    body: Joi.object().keys({
+      avatar: Joi.string().regex(URI_REGEX),
+    }),
+  }),
+  getUser
+);
 
 module.exports = router;

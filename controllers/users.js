@@ -30,7 +30,7 @@ const getUser = (req, res, next) => {
     .catch(next);
 };
 
-const updateUser = (req, res, data, next) => {
+const updateUser = (req, res, next, data) => {
   const userId = req.user._id;
 
   if (!mongoose.isValidObjectId(userId)) {
@@ -52,19 +52,19 @@ const updateUser = (req, res, data, next) => {
     .catch(next);
 };
 
-const updateUserInfo = (req, res) => {
+const updateUserInfo = (req, res, next) => {
   const data = {
     name: req.body.name,
     about: req.body.about,
   };
-  updateUser(req, res, data);
+  updateUser(req, res, next, data);
 };
 
-const updateUserAvatar = (req, res) => {
+const updateUserAvatar = (req, res, next) => {
   const data = {
     avatar: req.body.avatar,
   };
-  updateUser(req, res, data);
+  updateUser(req, res, next, data);
 };
 
 const getUserInfo = (req, res, next) => {

@@ -61,17 +61,16 @@ const deleteCard = (req, res, next) => {
     .catch(next);
 };
 
-const toogleLikeCard = (req, res, data, next) => {
+const toogleLikeCard = (req, res, next, data) => {
   const { cardId } = req.params;
 
   if (!mongoose.isValidObjectId(cardId)) {
     throw new BadRequestError('Невалидный ID');
   }
-
   Card.findByIdAndUpdate(cardId, data, { new: true })
     .populate(['owner', 'likes'])
     .orFail(() => {
-      throw new NotFoundError(`Карточка c ID:${cardId} не найдена`);
+      next(new NotFoundError(`Карточка c ID:${cardId} не найдена`));
     })
     .then((likedCard) => {
       res.status(HTTP_STATUS_OK).send(likedCard);
@@ -79,18 +78,18 @@ const toogleLikeCard = (req, res, data, next) => {
     .catch(next);
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   const userId = req.user._id;
   const data = { $addToSet: { likes: userId } };
 
-  toogleLikeCard(req, res, data);
+  toogleLikeCard(req, res, next, data);
 };
 
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
   const userId = req.user._id;
   const data = { $pull: { likes: userId } };
 
-  toogleLikeCard(req, res, data);
+  toogleLikeCard(req, res, next, data);
 };
 
 module.exports = {

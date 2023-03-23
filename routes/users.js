@@ -9,7 +9,7 @@ const {
   getUserInfo,
 } = require('../controllers/users');
 
-const { URI_REGEX } = require('../utils/constants');
+const { URI_REGEX, OBJECTID_REGEX } = require('../utils/constants');
 
 router.get('/', getUsers);
 router.get('/me', getUserInfo);
@@ -36,7 +36,7 @@ router.get(
   '/:userId',
   celebrate({
     params: Joi.object().keys({
-      avatar: Joi.string().regex(URI_REGEX),
+      userId: Joi.string().regex(OBJECTID_REGEX),
     }),
   }),
   getUser

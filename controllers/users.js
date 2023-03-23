@@ -39,14 +39,14 @@ const updateUser = (req, res, next, data) => {
 
   User.findByIdAndUpdate(userId, data, { runValidators: true, new: true })
     .orFail(() => {
-      throw new NotFoundError('Пользователя не существует');
+      next(new NotFoundError('Пользователя не существует'));
     })
     .then((newInfo) => {
       res.status(HTTP_STATUS_OK).send(newInfo);
     })
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
-        throw new BadRequestError('Ошибка валидации');
+        next(new BadRequestError('Ошибка валидации'));
       }
     })
     .catch(next);
@@ -76,7 +76,7 @@ const getUserInfo = (req, res, next) => {
 
   User.findById(userId, undefined, { runValidators: true })
     .orFail(() => {
-      throw new NotFoundError('Пользователя не существует');
+      next(new NotFoundError('Пользователя не существует'));
     })
     .then((user) => {
       res.status(HTTP_STATUS_OK).send(user);

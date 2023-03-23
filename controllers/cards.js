@@ -28,7 +28,7 @@ const createCard = async (req, res, next) => {
     res.status(HTTP_STATUS_CREATED).send(newCard);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      throw new BadRequestError('Ошибка валидации');
+      next(new BadRequestError('Ошибка валидации'));
     }
     next(error);
   }
@@ -39,7 +39,7 @@ const deleteCard = (req, res, next) => {
   const userId = req.user._id;
 
   if (!mongoose.isValidObjectId(cardId)) {
-    throw new BadRequestError('Невалидный ID');
+    throw BadRequestError('Невалидный ID');
   }
 
   Card.findById(cardId)

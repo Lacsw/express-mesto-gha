@@ -35,7 +35,7 @@ router.patch(
 router.get(
   '/:userId',
   celebrate({
-    body: Joi.object().keys({
+    params: Joi.object().keys({
       avatar: Joi.string().regex(URI_REGEX),
     }),
   }),

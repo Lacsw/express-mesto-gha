@@ -43,7 +43,7 @@ router.put(
 router.delete(
   '/:cardId/likes',
   celebrate({
-    body: Joi.object().keys({
+    params: Joi.object().keys({
       cardId: Joi.string().regex(OBJECTID_REGEX),
     }),
   }),

@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { errors } = require('celebrate');
 
-const { HTTP_STATUS_NOT_FOUND } = require('http2').constants;
+const NotFoundError = require('../errors/not-found-err');
 
 const authRouter = require('./auth');
 const usersRouter = require('./users');
@@ -14,8 +14,8 @@ router.use(auth);
 
 router.use('/users', usersRouter);
 router.use('/cards', cardsRouter);
-router.all('*', (req, res) => {
-  res.status(HTTP_STATUS_NOT_FOUND).send({ message: 'Страница не найдена' });
+router.all('*', (req, res, next) => {
+  next(new NotFoundError('Страница не найдена'));
 });
 
 router.use(errors());

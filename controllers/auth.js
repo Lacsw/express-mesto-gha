@@ -7,7 +7,7 @@ const User = require('../models/user');
 const BadRequestError = require('../errors/bad-request-err');
 const ConflictError = require('../errors/conflict-err');
 
-const { SECRET_WORD } = require('../config');
+const { SECRET_WORD, NODE_ENV } = require('../config');
 const { MONGO_DUPLICATE_CODE } = require('../utils/constants');
 
 const { HTTP_STATUS_CREATED } = http2.constants;
@@ -17,12 +17,20 @@ const login = (req, res, next) => {
 
   User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, SECRET_WORD, {
-        expiresIn: '7d',
-      });
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === 'production' ? SECRET_WORD : 'dev-secret',
+        {
+          expiresIn: '7d',
+        }
+      );
 
       res
-        .cookie('jwt', token, { maxAge: 3600000, httpOnly: true })
+        .cookie('jwt', token, {
+          maxAge: 3600000,
+          httpOnly: true,
+          sameSite: true,
+        })
         .send({ token });
     })
     .catch(next);

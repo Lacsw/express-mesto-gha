@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
 const router = require('./routes/index');
 
@@ -9,6 +10,7 @@ const { PORT } = require('./config');
 const app = express();
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 

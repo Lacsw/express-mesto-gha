@@ -46,12 +46,15 @@ const createUser = (req, res, next) => {
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
         next(new BadRequestError(error.message));
+      } else {
+        next(error);
       }
       if (error.code === MONGO_DUPLICATE_CODE) {
         next(new ConflictError('Пользователь с такой почтой уже существует.'));
+      } else {
+        next(error);
       }
-    })
-    .catch(next);
+    });
 };
 
 module.exports = { createUser, login };

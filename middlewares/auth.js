@@ -1,4 +1,3 @@
-/* eslint consistent-return: off */
 const jwt = require('jsonwebtoken');
 
 const UnauthorizedError = require('../errors/unauthorized-err');

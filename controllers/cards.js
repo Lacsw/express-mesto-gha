@@ -22,15 +22,15 @@ const createCard = async (req, res, next) => {
   const owner = req.user._id;
 
   try {
-    const data = await Card.create({ name, link, owner });
-    const newCard = await data.populate(['owner', 'likes']);
+    const newCard = await Card.create({ name, link, owner });
 
     res.status(HTTP_STATUS_CREATED).send(newCard);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
       next(new BadRequestError('Ошибка валидации'));
+    } else {
+      next(error);
     }
-    next(error);
   }
 };
 

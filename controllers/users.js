@@ -47,9 +47,10 @@ const updateUser = (req, res, next, data) => {
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
         next(new BadRequestError('Ошибка валидации'));
+      } else {
+        next(error);
       }
-    })
-    .catch(next);
+    });
 };
 
 const updateUserInfo = (req, res, next) => {

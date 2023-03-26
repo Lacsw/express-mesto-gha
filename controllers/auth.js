@@ -45,14 +45,12 @@ const createUser = (req, res, next) => {
     .then((newUser) => res.status(HTTP_STATUS_CREATED).send(newUser.toJSON()))
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
-        return next(new BadRequestError(error.message));
+        next(new BadRequestError(error.message));
+      } else if (error.code === MONGO_DUPLICATE_CODE) {
+        next(new ConflictError('Пользователь с такой почтой уже существует.'));
+      } else {
+        next(error);
       }
-      if (error.code === MONGO_DUPLICATE_CODE) {
-        return next(
-          new ConflictError('Пользователь с такой почтой уже существует.')
-        );
-      }
-      next(error);
     });
 };
 

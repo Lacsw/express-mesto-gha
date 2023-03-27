@@ -23,7 +23,9 @@
     "eslint": "^8.35.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.27.5",
-    "nodemon": "^2.0.21"
+    "nodemon": "^2.0.21",
+    "express-winston": "^4.2.0",
+    "winston": "^3.8.2"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
